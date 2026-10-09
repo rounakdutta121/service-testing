@@ -238,57 +238,6 @@
             animation: loopGradient 8s ease-in-out infinite;
         }
 
-        /* Background lightning strikes (opacity-only flicker) */
-        @keyframes strikeFlash {
-            0% { opacity: 0; }
-            3% { opacity: 1; }
-            7% { opacity: 0.25; }
-            11% { opacity: 1; }
-            20% { opacity: 0.7; }
-            24% { opacity: 1; }
-            32% { opacity: 0.45; }
-            36% { opacity: 0.9; }
-            46%, 100% { opacity: 0; }
-        }
-
-        .has-lights { position: relative; isolation: isolate; }
-        .bg-lights {
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-            --bolt-core: #2563eb;
-            --bolt-glow: rgba(96, 165, 250, 0.35);
-            --flash: rgba(59, 130, 246, 0.10);
-            opacity: 0.75;
-        }
-        .bg-lights.on-dark {
-            --bolt-core: #e0f2fe;
-            --bolt-glow: rgba(56, 189, 248, 0.45);
-            --flash: rgba(56, 189, 248, 0.22);
-            opacity: 1;
-        }
-        .bg-lights.above { z-index: 0; }
-        .bg-lights .strike {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            animation: strikeFlash var(--strike-dur, 3s) linear infinite;
-        }
-        .bg-lights .flash { position: absolute; inset: 0; }
-        .bg-lights svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-        .bg-lights path {
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            vector-effect: non-scaling-stroke;
-        }
-        .bg-lights .bolt-glow { stroke: var(--bolt-glow); stroke-width: 7; }
-        .bg-lights .bolt-core { stroke: var(--bolt-core); stroke-width: 1.8; }
-        .bg-lights .branch-glow { stroke: var(--bolt-glow); stroke-width: 4; }
-        .bg-lights .branch-core { stroke: var(--bolt-core); stroke-width: 1; opacity: 0.8; }
-
         .loops-paused *, .loops-paused *::before, .loops-paused *::after { animation-play-state: paused !important; }
 
         @media (prefers-reduced-motion: reduce) {
@@ -296,7 +245,6 @@
             .loop-shine::after, .section-tag::after, .loop-ring::after, section .gradient-text {
                 animation: none !important;
             }
-            .bg-lights { display: none; }
         }
 
         .back-to-top {
@@ -2148,86 +2096,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 menuIcon.classList.remove('fa-times');
             });
         });
-
-        (function initBackgroundLightning() {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-            const rand = (min, max) => min + Math.random() * (max - min);
-            const SVG_NS = 'http://www.w3.org/2000/svg';
-
-            const walk = (x, y, steps, dx, dyMin, dyMax, drift) => {
-                const pts = [[x, y]];
-                for (let i = 0; i < steps; i++) {
-                    x += rand(-dx, dx) + drift;
-                    y += rand(dyMin, dyMax);
-                    pts.push([x, y]);
-                }
-                return pts;
-            };
-            const toPath = (pts) => 'M' + pts.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
-
-            const drawBolt = (strike) => {
-                const x0 = rand(8, 92);
-                const main = walk(x0, -2, Math.round(rand(9, 14)), 4, 4, 9, 0);
-                const branches = [];
-                main.forEach((p, i) => {
-                    if (i > 1 && i < main.length - 2 && Math.random() < 0.3) {
-                        const dir = Math.random() < 0.5 ? -1 : 1;
-                        branches.push(walk(p[0], p[1], Math.round(rand(3, 6)), 2.5, 3, 6, dir * 2.5));
-                    }
-                });
-                const svg = strike.querySelector('svg');
-                svg.querySelector('.bolt-glow').setAttribute('d', toPath(main));
-                svg.querySelector('.bolt-core').setAttribute('d', toPath(main));
-                const b = branches.map(toPath).join(' ');
-                svg.querySelector('.branch-glow').setAttribute('d', b);
-                svg.querySelector('.branch-core').setAttribute('d', b);
-                strike.querySelector('.flash').style.background =
-                    'radial-gradient(ellipse 45% 70% at ' + x0.toFixed(1) + '% 0%, var(--flash), transparent 70%)';
-            };
-
-            const makeStrike = (dur, delay) => {
-                const strike = document.createElement('div');
-                strike.className = 'strike';
-                strike.style.setProperty('--strike-dur', dur + 's');
-                strike.style.animationDelay = delay + 's';
-                strike.innerHTML = '<div class="flash"></div>';
-                const svg = document.createElementNS(SVG_NS, 'svg');
-                svg.setAttribute('viewBox', '0 0 100 100');
-                svg.setAttribute('preserveAspectRatio', 'none');
-                ['bolt-glow', 'branch-glow', 'bolt-core', 'branch-core'].forEach((cls) => {
-                    const path = document.createElementNS(SVG_NS, 'path');
-                    path.setAttribute('class', cls);
-                    svg.appendChild(path);
-                });
-                strike.appendChild(svg);
-                drawBolt(strike);
-                strike.addEventListener('animationiteration', () => drawBolt(strike));
-                return strike;
-            };
-
-            document.querySelectorAll('body > section:not(#hero-section), body > footer, body > #footnote').forEach((host) => {
-                const layer = document.createElement('div');
-                layer.className = 'bg-lights';
-                layer.setAttribute('aria-hidden', 'true');
-                if (/bg-slate-9|bg-slate-950/.test(host.className || '') || host.tagName === 'FOOTER') layer.classList.add('on-dark');
-                const strikes = host.id === 'footnote' ? 2 : 3;
-                const dur = +(rand(2.6, 3.4)).toFixed(2);
-                const base = rand(0, dur);
-                for (let s = 0; s < strikes; s++) {
-                    layer.appendChild(makeStrike(dur, -(base + (s * dur) / strikes).toFixed(2)));
-                }
-                host.classList.add('has-lights');
-                const content = host.querySelector(':scope > .relative.z-10');
-                if (content) {
-                    layer.classList.add('above');
-                    host.insertBefore(layer, content);
-                } else {
-                    host.prepend(layer);
-                }
-            });
-        })();
-
 
         (function initLoopAnimations() {
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
