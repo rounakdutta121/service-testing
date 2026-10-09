@@ -71,6 +71,34 @@
             text-shadow: none;
             filter: drop-shadow(0 2px 18px rgba(2, 6, 23, 0.9));
         }
+        .hero-mark {
+            position: relative;
+            display: inline-block;
+            white-space: nowrap;
+            padding: 0 0.18em;
+            color: #0f172a;
+            text-shadow: none;
+            isolation: isolate;
+        }
+        .hero-mark::before {
+            content: "";
+            position: absolute;
+            inset: 0.12em -0.04em 0.04em;
+            z-index: -1;
+            border-radius: 0.14em 0.3em 0.18em 0.34em;
+            background: linear-gradient(100deg, #fbbf24 0%, #f59e0b 55%, #fb923c 100%);
+            box-shadow: 0 10px 34px rgba(245, 158, 11, 0.45);
+            transform: skewX(-8deg) rotate(-1deg);
+            transform-origin: left center;
+            animation: heroMark 0.9s 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes heroMark {
+            from { transform: skewX(-8deg) rotate(-1deg) scaleX(0); }
+            to { transform: skewX(-8deg) rotate(-1deg) scaleX(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-mark::before { animation: none; }
+        }
 
         .svc-card {
             position: relative;
@@ -448,7 +476,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
 
                 <h1 class="text-[2rem] min-[400px]:text-4xl sm:text-5xl lg:text-7xl font-black leading-[1.08] tracking-tight">
-                    Product Testing &amp;<br class="hidden sm:block">
+                    <span class="hero-mark">Product Testing</span> &amp;<br class="hidden sm:block">
                     <span class="gradient-text">CE Compliance Support</span><br class="hidden sm:block">
                     for Manufacturers
                 </h1>
